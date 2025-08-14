@@ -8,7 +8,7 @@ trigger: always_on
 
 ## 技术栈
 
-Python-FastAPI、数据库：PostgreSQL或MySQL
+Python-FastAPI、数据库：PostgreSQL或MySQL，以及Redis
 
 ---
 

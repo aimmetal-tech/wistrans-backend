@@ -51,7 +51,9 @@ POST /translate
       "text": "这是另一段要翻译的文本"
     }
   ],
-  "extra_args": "翻译风格要求，如正式、口语化等"
+  "extra_args": {
+    "style": "每句开头加上`😭`，在每句翻译后加上`😊`"
+  }
 }
 ```
 
@@ -59,19 +61,16 @@ POST /translate
 
 ```json
 {
-  "target": "en",
+  "translated": "en",
   "segments": [
     {
       "id": "segment1",
-      "text": "This is the text to be translated"
+      "text": "😭This is the text to be translated😊"
     },
     {
       "id": "segment2",
-      "text": "This is another text to be translated"
+      "text": "😭This is another text to be translated😊"
     }
   ],
-  "extra_args": {
-    "style": "每句开头加上`😭`，在每句翻译后加上`😊`"
-  }
 }
 ```
