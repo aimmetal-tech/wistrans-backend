@@ -35,7 +35,7 @@ POST /translate
 | ------ | ------ | ---- | ------------------------------------------- |
 | id     | string | 是   | 片段 ID，用于标识片段以便返回到前端相应位置 |
 | text   | string | 是   | 要翻译的文本内容                            |
-| model  | string | 否   | 模型名称，默认为 "deepseek-chat"            |
+| model  | string | 否   | 模型名称，默认为 "qwen-turbo-latest"            |
 
 #### extra_args 参数说明
 

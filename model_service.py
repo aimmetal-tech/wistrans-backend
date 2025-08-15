@@ -6,6 +6,19 @@ import json
 from dotenv import load_dotenv
 import re
 from langchain.prompts import PromptTemplate
+from cache_service import cache_service
+import logging
+
+# 配置日志记录器
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# 创建控制台处理器（如果还没有的话）
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 # 加载环境变量
 load_dotenv()
@@ -54,6 +67,21 @@ translation_prompt = PromptTemplate.from_template("""{identity_description}
 
 {extra_instructions}""")
 
+# 定义单词翻译提示词模板
+word_translation_prompt = PromptTemplate.from_template("""{identity_description}
+
+请将以下单词翻译为{target_language}。
+
+原始单词：
+{word}
+
+请严格按照以下格式输出，不要添加任何额外说明：
+<translated_word>
+[在此处输出翻译结果]
+</translated_word>
+
+{extra_instructions}""")
+
 async def translate_text(text: str, target_language: str, model_name: str = "deepseek-chat", extra_args: dict = None) -> str:
     """
     调用大模型API进行文本翻译
@@ -67,6 +95,18 @@ async def translate_text(text: str, target_language: str, model_name: str = "dee
     Returns:
         翻译后的文本
     """
+    # 首先检查句子级缓存
+    cached_result = cache_service.get_sentence_cache(text, target_language, model_name, extra_args)
+    if cached_result:
+        logger.info(f"已在缓存中找到句子翻译结果: {text}")
+        full_cache_key = cache_service._generate_cache_key("sentence", text, target_language, model_name, extra_args)
+        logger.debug(f"命中句子级缓存: {full_cache_key}")
+        return cached_result
+    else:
+        logger.info(f"未在缓存中找到句子翻译结果，将调用模型API: {text}")
+        cache_key = cache_service._generate_cache_key("sentence", text, target_language, model_name, extra_args)
+        logger.debug(f"生成缓存键: {cache_key} (类型: sentence)")
+    
     # 获取模型配置
     config = MODEL_CONFIGS.get(model_name, MODEL_CONFIGS["deepseek-chat"])
     
@@ -119,10 +159,104 @@ async def translate_text(text: str, target_language: str, model_name: str = "dee
         match = re.search(r"<translated_text>(.*?)</translated_text>", translated_text, re.DOTALL)
         if match:
             # 提取标签内的内容并去除首尾空白
-            return match.group(1).strip()
+            translated_text = match.group(1).strip()
         else:
             # 如果没有找到标签，返回原始响应（向后兼容）
-            return translated_text
+            translated_text = translated_text
+        
+        # 将翻译结果存入句子级缓存
+        cache_service.set_sentence_cache(text, target_language, model_name, translated_text, extra_args)
+        # 日志已在cache_service中打印
+        
+        return translated_text
+
+async def translate_word(word: str, target_language: str, model_name: str = "deepseek-chat", extra_args: dict = None) -> str:
+    """
+    调用大模型API进行单词翻译
+    
+    Args:
+        word: 要翻译的单词
+        target_language: 目标语言
+        model_name: 使用的模型名称
+        extra_args: 额外的翻译要求
+    
+    Returns:
+        翻译后的单词
+    """
+    # 首先检查单词级缓存
+    cached_result = cache_service.get_word_cache(word, target_language, model_name, extra_args)
+    if cached_result:
+        logger.info(f"已在缓存中找到单词翻译结果: {word}")
+        full_cache_key = cache_service._generate_cache_key("word", word, target_language, model_name, extra_args)
+        logger.debug(f"命中单词级缓存: {full_cache_key}")
+        return cached_result
+    else:
+        logger.info(f"未在缓存中找到单词翻译结果，将调用模型API: {word}")
+        cache_key = cache_service._generate_cache_key("word", word, target_language, model_name, extra_args)
+        logger.debug(f"生成缓存键: {cache_key} (类型: word)")
+    
+    # 获取模型配置
+    config = MODEL_CONFIGS.get(model_name, MODEL_CONFIGS["deepseek-chat"])
+    
+    # 获取API密钥
+    api_key = os.getenv(config["api_key_env"])
+    if not api_key:
+        raise ValueError(f"API密钥未配置: {config['api_key_env']}")
+    
+    # 获取身份角色描述
+    identity = extra_args.get("identity") if extra_args else None
+    identity_description = IDENTITY_DESCRIPTIONS.get(identity, "你是一个专业的翻译AI")
+    
+    # 构造额外说明
+    extra_instructions = ""
+    if extra_args and "style" in extra_args:
+        extra_instructions = f"翻译风格要求: {extra_args['style']}"
+    
+    # 使用PromptTemplate生成提示词
+    prompt = word_translation_prompt.format(
+        identity_description=identity_description,
+        target_language=target_language,
+        word=word,
+        extra_instructions=extra_instructions
+    )
+    
+    # 构造请求头
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # 构造请求体
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.3  # 单词翻译使用较低的温度值以获得更一致的结果
+    }
+    
+    # 发送请求
+    async with httpx.AsyncClient() as client:
+        response = await client.post(config["url"], headers=headers, json=payload, timeout=30.0)
+        response.raise_for_status()
+        
+        result = response.json()
+        translated_word = result["choices"][0]["message"]["content"]
+        
+        # 使用正则表达式提取标签内的内容
+        match = re.search(r"<translated_word>(.*?)</translated_word>", translated_word, re.DOTALL)
+        if match:
+            # 提取标签内的内容并去除首尾空白
+            translated_word = match.group(1).strip()
+        else:
+            # 如果没有找到标签，返回原始响应（向后兼容）
+            translated_word = translated_word
+        
+        # 将翻译结果存入单词级缓存
+        cache_service.set_word_cache(word, target_language, model_name, translated_word, extra_args)
+        # 日志已在cache_service中打印
+        
+        return translated_word
 
 async def translate_segments(segments: List[Segment], target_language: str, extra_args: dict = None) -> List[dict]:
     """

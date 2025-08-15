@@ -302,3 +302,32 @@ Here is the translation following your requested style:
 这种改进可以让AI在特定的角色语境下进行翻译，提供更加专业和符合场景的翻译结果。
 ````
 
+## 数据库redis缓存功能
+
+- 用户
+
+```
+查看当前项目，准备接入Redis数据库作为翻译缓存。内容要求如下
+
+关于Redis数据库的配置信息：端口6379，数据库编号0。
+
+翻译缓存做到句子级和单词级缓存。当用户翻译未知句子时，先将作为句子级缓存存入Redis，然后调用大模型在后台将句子里的单词一个一个重新翻译，按照单词级别缓存。
+
+为了更好地让大模型在后台将句子里的单词一个一个翻译（第2点提到的内容），新增/trans-word接口。Method为POST，Body的示例如下
+
+{ "word": [ { "id": "0", "word": "hello" }, { "id": "1", "word": "world" } ] }
+
+返回体示例如下 { "translated_word": [ { "id": "0", "word": "你好" }, { "id": "1", "word": "世界" } ] }
+
+此外在调用大模型时也要通过PromptTemplate创建一个带有<trans class=word></trans class=word>标签的prompt，防止大模型回答越界。
+
+句子级TTL为30min，单词级TTL为60min。
+
+在缓存的每次函数调用时用logger.info打印信息
+```
+
+- 用户
+
+```
+```
+

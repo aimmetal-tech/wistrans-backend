@@ -19,11 +19,13 @@ Python-FastAPI、数据库：PostgreSQL或MySQL，以及Redis
    - 输入参数
    - 输出参数
 
+2. 在关键函数调用时使用日志打印，如`logger.info()`
+
 ## 功能说明
 
 ### 模型 API
 
-默认模型为：deepseek-chat
+默认模型为：qwen-turbo-latest
 
 以下是可选模型：
 
