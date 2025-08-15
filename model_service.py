@@ -30,8 +30,19 @@ MODEL_CONFIGS = {
     }
 }
 
+# 定义身份角色描述
+IDENTITY_DESCRIPTIONS = {
+    "通用专家": "你是一个通用领域的翻译专家，擅长各种类型的文本翻译。",
+    "学术论文翻译师": "你是一个专业的学术论文翻译师，擅长将学术论文准确翻译成目标语言，保持学术术语的准确性和语言的严谨性。",
+    "意译作家": "你是一个专业的意译作家，擅长在翻译过程中保持原文的意境和风格，使译文更符合目标语言的文化背景和表达习惯。",
+    "程序专家": "你是一个专业的程序专家，擅长翻译与编程、软件开发相关的技术文档，能够准确处理技术术语和代码注释。",
+    "古今中外翻译师": "你是一个多语言的，阅读过古今中外名著的翻译专家，擅长将不同语言的文本翻译成目标语言，并熟悉中国谚语和中世纪英语或是谚语。"
+}
+
 # 定义翻译提示词模板
-translation_prompt = PromptTemplate.from_template("""你是一个专业的翻译AI，请将以下文本翻译为{target_language}。
+translation_prompt = PromptTemplate.from_template("""{identity_description}
+
+请将以下文本翻译为{target_language}。
 
 原始文本：
 {text}
@@ -64,6 +75,10 @@ async def translate_text(text: str, target_language: str, model_name: str = "dee
     if not api_key:
         raise ValueError(f"API密钥未配置: {config['api_key_env']}")
     
+    # 获取身份角色描述
+    identity = extra_args.get("identity") if extra_args else None
+    identity_description = IDENTITY_DESCRIPTIONS.get(identity, "你是一个专业的翻译AI")
+    
     # 构造额外说明
     extra_instructions = ""
     if extra_args and "style" in extra_args:
@@ -71,6 +86,7 @@ async def translate_text(text: str, target_language: str, model_name: str = "dee
     
     # 使用PromptTemplate生成提示词
     prompt = translation_prompt.format(
+        identity_description=identity_description,
         target_language=target_language,
         text=text,
         extra_instructions=extra_instructions

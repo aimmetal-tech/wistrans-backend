@@ -226,3 +226,79 @@ Here is the translation following your requested style:
 这个修改确保了翻译结果的纯净性，只返回用户真正需要的翻译内容，提高了翻译服务的质量和一致性。
 ````
 
+- 用户
+
+```刘睿琪
+在extra_args再加入一个identity用于给定大模型身份， 例如通用专家、学术论文翻译师、意译作家、程序专家等
+```
+
+- *AI*
+
+````AI回复
+我将为系统添加一个新的功能，允许通过 [extra_args](file://e:\code\Python\wistrans-back-py\models.py#L80-L80) 中的 `identity` 参数来指定大模型的身份角色，如通用专家、学术论文翻译师、意译作家、程序专家等。这将有助于模型更好地理解上下文并提供更专业的翻译。
+
+
+
+```toolCall::edit_file::call_4f012c19d4af4193af2659e5::INIT
+```
+
+更新docs/api.md，添加identity参数的说明
+
+```toolCall::edit_file::call_65db3910480148a89c8b95e6::INIT
+```
+
+检查修改后的代码是否有语法错误或其他问题
+
+```toolCall::get_problems::call_e6449d30503042668544607a::INIT
+```
+
+我已经成功添加了 [identity](file://e:\code\Python\wistrans-back-py\models.py#L47-L47) 参数支持，让用户可以指定大模型的身份角色。以下是我所做的更改：
+
+### 主要改进
+
+1. **添加身份角色功能**：
+   - 定义了四种身份角色：通用专家、学术论文翻译师、意译作家、程序专家
+   - 为每种身份角色编写了详细的描述，帮助AI更好地理解其角色定位
+
+2. **更新提示词模板**：
+   - 修改了 [translation_prompt](file://e:/code/Python/wistrans-back-py/model_service.py#L39-L49) 模板，将身份描述作为提示词的开头部分
+   - 使AI能够在特定角色的语境下进行翻译工作
+
+3. **处理 identity 参数**：
+   - 从 [extra_args](file://e:\code\Python\wistrans-back-py\models.py#L80-L80) 中提取 [identity](file://e:\code\Python\wistrans-back-py\models.py#L47-L47) 参数
+   - 根据指定的身份角色选择相应的描述文本
+   - 如果未指定身份或指定的身份不存在，则默认使用"专业的翻译AI"
+
+4. **更新API文档**：
+   - 在 [docs/api.md](file:///e:/code/Python/wistrans-back-py/docs/api.md) 中添加了 [identity](file://e:\code\Python\wistrans-back-py\models.py#L47-L47) 参数的详细说明
+   - 明确列出了支持的身份角色选项
+
+### 使用示例
+
+用户现在可以在请求中添加 [identity](file://e:\code\Python\wistrans-back-py\models.py#L47-L47) 参数来指定翻译专家的身份：
+
+```json
+{
+  "target": "en",
+  "segments": [
+    {
+      "id": "segment1",
+      "text": "这是要翻译的文本"
+    }
+  ],
+  "extra_args": {
+    "identity": "学术论文翻译师"
+  }
+}
+```
+
+### 身份角色说明
+
+1. **通用专家**：适用于各种类型的文本翻译
+2. **学术论文翻译师**：专门处理学术论文，保持术语准确性和语言严谨性
+3. **意译作家**：注重保持原文意境和风格，使译文更符合目标语言文化
+4. **程序专家**：专门翻译技术文档，准确处理技术术语和代码注释
+
+这种改进可以让AI在特定的角色语境下进行翻译，提供更加专业和符合场景的翻译结果。
+````
+
