@@ -37,7 +37,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，填入从各 AI 平台获取的 API 密钥。
+编辑 `.env` 文件，填入从各 AI 平台获取的 API 密钥。必填QWEN_API_KEY的密钥，从阿里云百炼上获取
 
 ### 3. 启动服务
 
@@ -115,8 +115,8 @@ POST /translate
 
 | 模型名称             | 默认启用 | 提供商     |
 | -------------------- | -------- | ---------- |
-| deepseek-chat        | 是       | 深度求索   |
-| qwen-turbo-latest    | 否       | 阿里云百炼 |
+| deepseek-chat        | 否       | 深度求索   |
+| **qwen-turbo-latest**    | 是       | 阿里云百炼 |
 | gpt-4o               | 否       | OpenAI     |
 | kimi-k2-0711-preview | 否       | 月之暗面   |
 
