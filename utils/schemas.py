@@ -36,3 +36,11 @@ class TranslatedWordItem(BaseModel):
 
 class WordTranslateResponse(BaseModel):
     translated_word: List[TranslatedWordItem]
+
+# OCR相关模型
+class OCRRequest(BaseModel):
+    image: str  # base64编码的图片数据
+
+class OCRResponse(BaseModel):
+    detected_text: List[Dict[str, Any]]  # 检测到的文本列表，包括文本内容和位置信息
+    full_text: str  # 完整的识别文本

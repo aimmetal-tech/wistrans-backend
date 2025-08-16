@@ -1,7 +1,13 @@
-from fastapi import FastAPI
-from schemas import TranslateRequest, TranslateResponse, TranslatedSegment, WordTranslateRequest, WordTranslateResponse
-from model_service import translate_segments, translate_word
+from fastapi import FastAPI, UploadFile, File
+from utils.schemas import TranslateRequest, TranslateResponse, TranslatedSegment, WordTranslateRequest, WordTranslateResponse, OCRResponse
+from services.model_service import translate_segments, translate_word
+from services.ocr_service import process_image_from_base64
 import uvicorn
+import logging
+import base64
+
+# 创建logger实例
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -9,6 +15,33 @@ app = FastAPI()
 @app.get("/")
 def wistrans():
     return {"message": "欢迎来到wistrans智慧译"}
+
+# OCR接口
+@app.post("/ocr", response_model=OCRResponse)
+async def ocr_endpoint(image: UploadFile = File(...)):
+    """
+    OCR文字识别接口
+    
+    Args:
+        image: 上传的图片文件
+        
+    Returns:
+        OCR识别结果，包括检测到的文本列表和完整文本
+    """
+    try:
+        logger.info("收到OCR请求")
+        # 读取上传的图片文件并转换为base64
+        image_bytes = await image.read()
+        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        
+        result = process_image_from_base64(image_base64)
+        return OCRResponse(
+            detected_text=result["detected_text"],
+            full_text=result["full_text"]
+        )
+    except Exception as e:
+        logger.error("OCR处理失败: %s", str(e))
+        raise Exception(f"OCR处理失败: {str(e)}")
 
 # 翻译接口
 @app.post("/translate", response_model=TranslateResponse)

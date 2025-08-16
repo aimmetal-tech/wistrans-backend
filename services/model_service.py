@@ -1,12 +1,12 @@
 import os
 import httpx
 from typing import List
-from schemas import Segment
+from utils.schemas import Segment
 import json
 from dotenv import load_dotenv
 import re
 from langchain.prompts import PromptTemplate
-from cache_service import cache_service
+from services.cache_service import cache_service
 import logging
 
 # 配置日志记录器
@@ -82,7 +82,7 @@ word_translation_prompt = PromptTemplate.from_template("""{identity_description}
 
 {extra_instructions}""")
 
-async def translate_text(text: str, target_language: str, model_name: str = "deepseek-chat", extra_args: dict = None) -> str:
+async def translate_sentence(text: str, target_language: str, model_name: str = "deepseek-chat", extra_args: dict = None) -> str:
     """
     调用大模型API进行文本翻译
     
@@ -275,7 +275,7 @@ async def translate_segments(segments: List[Segment], target_language: str, extr
     for segment in segments:
         try:
             model_name = segment.model or "deepseek-chat"
-            translated_text = await translate_text(segment.text, target_language, model_name, extra_args)
+            translated_text = await translate_sentence(segment.text, target_language, model_name, extra_args)
             results.append({
                 "id": segment.id,
                 "text": translated_text

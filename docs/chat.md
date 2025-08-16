@@ -328,6 +328,21 @@ Here is the translation following your requested style:
 
 - 用户
 
+````
+查看现有项目结构，将PaddleOCR加入我的项目中。
+
+接口设计为/ocr，Method为POST，请求体为图片。
+
+请你根据需求先列出任务清单，我说开始执行后再执行
+````
+
+- 用户
 ```
+将接口改为接收请求体的内容类型为form-data，参数名为image，参数值为图片的格式
+```
+
+- 用户
+```
+根据现有接口来更新接口文档
 ```
 

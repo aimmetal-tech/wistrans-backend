@@ -8,18 +8,26 @@ trigger: always_on
 
 ## 技术栈
 
-Python-FastAPI、数据库：PostgreSQL或MySQL，以及Redis
+Python-FastAPI、数据库：PostgreSQL 或 MySQL，以及 Redis
 
 ---
 
 ## 项目要求
 
 1. 在代码关键函数和关键变量中添加注释，注释中包含：
+
    - 函数功能
    - 输入参数
    - 输出参数
 
 2. 在关键函数调用时使用日志打印，如`logger.info()`
+
+## 项目结构
+
+```
+|--services/(功能性模块)
+|--utils/(工具类)
+```
 
 ## 功能说明
 
